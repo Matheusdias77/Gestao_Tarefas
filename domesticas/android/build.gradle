@@ -1,0 +1,34 @@
+// Adicione o plug-in do Google Services
+buildscript {
+    repositories {
+        google() // Repositório para dependências do Google
+        mavenCentral() // Repositório Maven Central
+    }
+    dependencies {
+        // Gradle do Android (ajuste a versão conforme necessário)
+        classpath 'com.android.tools.build:gradle:8.1.1'
+        // Plug-in do Google Services para Firebase
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Configurações do diretório de build
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+// Tarefa para limpar o diretório de build
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

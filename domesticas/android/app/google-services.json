@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "403535321532",
+    "project_id": "gestao-tarefas-domesticas",
+    "storage_bucket": "gestao-tarefas-domesticas.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403535321532:android:c3fc64bd81782562e273b9",
+        "android_client_info": {
+          "package_name": "com.example.domesticas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyColibyc4Ba_soSd77IhhH2PV8QWgiMRqE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
