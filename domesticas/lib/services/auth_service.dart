@@ -24,29 +24,8 @@ class AuthService{
       throw Exception(e.message);
     }
   }
-
-  Future<void> resetPassword(String email) async {
-    try {
-      await _firebaseAuth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.message);
-    }
-  }
-
+    
   Future<void> signOut() async{
     return await _firebaseAuth.signOut();
   }
-
-  String? getCurrentUserEmail(){
-    return _firebaseAuth.currentUser!.email;
-  }
-
-  Future<void> signInAnonymously() async {
-    try {
-      await _firebaseAuth.signInAnonymously();
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.message);
-    }
-  }
-
 }

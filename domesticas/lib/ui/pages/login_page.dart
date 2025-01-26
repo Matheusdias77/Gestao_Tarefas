@@ -1,6 +1,4 @@
 import 'package:domesticas/services/auth_service.dart';
-import 'package:domesticas/ui/widgets/custom_password_form_field.dart';
-import 'package:domesticas/ui/widgets/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
   final double height;
-  final double width; // Adicionando a largura como parâmetro
+  final double width; 
   final String text;
   final void Function()? onClick;
   final Color backgroundColor;
@@ -34,7 +34,7 @@ class CustomButton extends StatelessWidget {
             backgroundColor: MaterialStateProperty.all(backgroundColor), 
             foregroundColor: MaterialStateProperty.all(textColor), 
             side: MaterialStateProperty.all(BorderSide(color: borderColor)),
-            elevation: MaterialStateProperty.all(5), // Adiciona sombra nas bordas
+            elevation: MaterialStateProperty.all(5), 
             shadowColor: MaterialStateProperty.all(Colors.black54),
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
               RoundedRectangleBorder(

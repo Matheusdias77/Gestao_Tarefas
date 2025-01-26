@@ -32,7 +32,6 @@ class AppRoot extends StatelessWidget {
       providers: data.providers,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Aula',
         home: const AuthChecker(),
       ),
     );
