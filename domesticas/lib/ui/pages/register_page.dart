@@ -22,7 +22,6 @@ class _RegisterPageState extends State<RegisterPage> {
   void signUp() async {
     final authService = Provider.of<AuthService>(context, listen: false);
 
-    // Verifica se as senhas coincidem
     if (passwordController.value.text != confirmPasswordController.value.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -32,47 +31,32 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // Mostra o indicador de progresso (loading)
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
     try {
-      // Chama o método de cadastro do AuthService
       final userCredential = await authService.signUpWithEmailAndPassword(
         emailController.value.text,
         passwordController.value.text,
       );
 
-      final userId = userCredential.user?.uid; // Obtém o UID do usuário
+      final userId = userCredential.user?.uid; 
       final userEmail = userCredential.user?.email;
 
-      // Adiciona um documento no Firestore na coleção 'Users'
       if (userId != null) {
         final usersCollection = FirebaseFirestore.instance.collection('Users');
         await usersCollection.doc(userId).set({
           'email': userEmail,
-          'createdAt': Timestamp.now(), // Adiciona um campo com a data de criação
+          'createdAt': Timestamp.now(), 
         });
       }
 
-      // Fecha o indicador de carregamento
       Navigator.of(context).pop();
 
-      // Após o cadastro bem-sucedido, redireciona para a tela de login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),
       );
     } catch (e) {
-      // Fecha o indicador de carregamento em caso de erro
       Navigator.of(context).pop();
 
-      // Exibe a mensagem de erro
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString()),
@@ -100,9 +84,9 @@ class _RegisterPageState extends State<RegisterPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/img/logoCasa.png', // Certifique-se de usar o caminho correto
-              width: 250, // Ajuste a largura da imagem
-              height: 180, // Ajuste a altura da imagem
+              'assets/img/logoCasa.png', 
+              width: 250, 
+              height: 180,
             ),
             Align(
               alignment: Alignment.topCenter,
@@ -134,7 +118,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
             const SizedBox(height: 50),
-            // Campo para o email
             Container(
               width: 300,
               child: TextFormField(
@@ -169,7 +152,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
             const SizedBox(height: 15),
-            // Campo para a senha
             Container(
               width: 300,
               child: TextFormField(

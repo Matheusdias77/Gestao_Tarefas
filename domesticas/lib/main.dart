@@ -24,8 +24,6 @@ class AppRoot extends StatelessWidget {
 
   final ConfigureProviders data;
 
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiProvider(

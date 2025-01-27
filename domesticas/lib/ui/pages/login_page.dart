@@ -1,4 +1,6 @@
 import 'package:domesticas/services/auth_service.dart';
+import 'package:domesticas/ui/pages/list_task_page.dart';
+import 'package:domesticas/ui/pages/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -18,13 +20,20 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
 
   void signIn() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
+  final authService = Provider.of<AuthService>(context, listen: false);
 
     try {
+      // Tenta fazer o login com email e senha
       await authService.signInWithEmailAndPassword(
         emailController.value.text,
         passwordController.value.text,
       );
+
+      Navigator.push(
+      context,
+        MaterialPageRoute(builder: (context) => const ListaTask()),
+      ); 
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -42,18 +51,17 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   @override
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
   return Scaffold(
     backgroundColor: const Color.fromARGB(255, 255, 255, 255),
     body: Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Adicionando a imagem acima do texto "Login"
           Image.asset(
-            'assets/img/logoCasa.png', // Certifique-se de usar o caminho correto
-            width: 250, // Ajuste a largura da imagem
-            height: 180, // Ajuste a altura da imagem
+            'assets/img/logoCasa.png', 
+            width: 250, 
+            height: 180, 
           ),
           Align(
             alignment: Alignment.topCenter,
@@ -169,7 +177,12 @@ Widget build(BuildContext context) {
             backgroundColor: Colors.white,
             textColor: Color.fromARGB(255, 255, 187, 12),
             borderColor: const Color.fromARGB(255, 255, 187, 12),
-            onClick: widget.onTap,
+            onClick: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RegisterPage()),
+              );
+            },
           ),
         ],
       ),
