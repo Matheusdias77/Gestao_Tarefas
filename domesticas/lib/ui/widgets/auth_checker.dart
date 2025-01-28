@@ -1,5 +1,5 @@
+import 'package:domesticas/ui/pages/SplashScreen.dart';
 import 'package:domesticas/ui/pages/login_or_register_page.dart';
-import 'package:domesticas/ui/pages/list_task_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -12,7 +12,7 @@ class AuthChecker extends StatelessWidget {
       body: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) =>
-        snapshot.hasData ? ListaTask() : const LoginOrRegisterPage(),
+        snapshot.hasData ? SplashScreen() : const LoginOrRegisterPage(),
       ),
     );
   }

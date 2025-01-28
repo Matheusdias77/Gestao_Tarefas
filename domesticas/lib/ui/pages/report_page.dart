@@ -17,21 +17,36 @@ class _ReportPageState extends State<ReportPage> {
     _fetchReport();
   }
 
-  Future<void> _fetchReport() async {
-    try {
-      // Obter o usuário logado
-      var user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        String loggedInEmail = user.email ?? '';
-        print('Email do usuário logado: $loggedInEmail');
+Future<void> _fetchReport() async {
+  try {
+    var user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      String loggedInEmail = user.email ?? '';
+      print('Email do usuário logado: $loggedInEmail');
 
-        // Buscar as famílias do usuário logado
-        QuerySnapshot familySnapshot = await FirebaseFirestore.instance
+      // Buscar as famílias do usuário logado
+      QuerySnapshot familySnapshot = await FirebaseFirestore.instance
+          .collection('Familia')
+          .where('emailUser', isEqualTo: loggedInEmail)
+          .get();
+
+      List<String> familyEmails = [];
+      if (familySnapshot.docs.isNotEmpty) {
+        for (var doc in familySnapshot.docs) {
+          String emailUser = doc['emailUser'] ?? '';
+          String emailInviter = doc['emailInviter'] ?? '';
+
+          if (emailUser.isNotEmpty) familyEmails.add(emailUser);
+          if (emailInviter.isNotEmpty) familyEmails.add(emailInviter);
+        }
+      }
+
+      if (familyEmails.isEmpty) {
+        familySnapshot = await FirebaseFirestore.instance
             .collection('Familia')
-            .where('emailUser', isEqualTo: loggedInEmail)
+            .where('emailInviter', isEqualTo: loggedInEmail)
             .get();
 
-        List<String> familyEmails = [];
         if (familySnapshot.docs.isNotEmpty) {
           for (var doc in familySnapshot.docs) {
             String emailUser = doc['emailUser'] ?? '';
@@ -41,130 +56,82 @@ class _ReportPageState extends State<ReportPage> {
             if (emailInviter.isNotEmpty) familyEmails.add(emailInviter);
           }
         }
+      }
 
-        // Se não houver famílias, verificar na coleção onde o usuário foi convidado
-        if (familyEmails.isEmpty) {
-          familySnapshot = await FirebaseFirestore.instance
-              .collection('Familia')
-              .where('emailInviter', isEqualTo: loggedInEmail)
+      if (familyEmails.isEmpty) {
+        print('O usuário NÃO está em nenhuma família. Relatório não será exibido.');
+        setState(() {
+          isLoading = false;
+        });
+        return; // Não continua com a busca do relatório
+      }
+
+      Set<String> emailsSet = {};
+      for (var email in familyEmails) {
+        emailsSet.add(email);
+      }
+
+      // Lista para armazenar os resultados de forma paralela
+      List<Future<Map<String, dynamic>>> tasks = emailsSet.map((email) async {
+        int taskNotCount = 0;
+        int taskCount = 0;
+
+        // Buscar o usuário correspondente na coleção 'Users'
+        QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .where('email', isEqualTo: email)
+            .get();
+
+        if (userSnapshot.docs.isNotEmpty) {
+          String userUid = userSnapshot.docs.first.id;
+
+          // Buscar as tarefas concluídas e não concluídas
+          QuerySnapshot taskSnapshot = await FirebaseFirestore.instance
+              .collection('Users')
+              .doc(userUid)
+              .collection('task')
+              .where('responsaveis', arrayContains: email) // Verificar se o email está no campo responsaveis
               .get();
 
-          if (familySnapshot.docs.isNotEmpty) {
-            for (var doc in familySnapshot.docs) {
-              String emailUser = doc['emailUser'] ?? '';
-              String emailInviter = doc['emailInviter'] ?? '';
-
-              if (emailUser.isNotEmpty) familyEmails.add(emailUser);
-              if (emailInviter.isNotEmpty) familyEmails.add(emailInviter);
+          // Contar tarefas concluídas e não concluídas
+          for (var doc in taskSnapshot.docs) {
+            bool isConcluida = doc['concluida'] ?? false;
+            if (isConcluida) {
+              taskCount++;
+            } else {
+              taskNotCount++;
             }
           }
         }
 
-        if (familyEmails.isEmpty) {
-          print('O usuário NÃO está em nenhuma família. Relatório não será exibido.');
-          setState(() {
-            isLoading = false;
-          });
-          return; // Não continua com a busca do relatório
-        }
+        // Retornar o email e o número de tarefas concluídas e não concluídas
+        return {'email': email, 'taskCount': taskCount, 'taskNotCount': taskNotCount};
+      }).toList();
 
-        print('Usuário está em uma ou mais famílias. Emails da(s) família(s): $familyEmails');
+      // Executar todas as tarefas em paralelo
+      List<Map<String, dynamic>> results = await Future.wait(tasks);
 
-        Set<String> emailsSet = {};
+      // Ordenar os resultados por número de tarefas concluídas
+      results.sort((a, b) => b['taskCount'].compareTo(a['taskCount']));
 
-        // Buscar os membros da família para o relatório
-        for (var email in familyEmails) {
-          emailsSet.add(email); // Adiciona todos os e-mails encontrados nas famílias
-        }
-
-        print('Emails a serem mostrados no relatório: $emailsSet');
-
-        // Lista para armazenar os resultados de forma paralela
-        List<Future<Map<String, dynamic>>> tasks = emailsSet.map((email) async {
-          int taskNotCount = 0;
-
-          // Buscar o usuário correspondente na coleção 'Users'
-          QuerySnapshot userSnapshot = await FirebaseFirestore.instance
-              .collection('Users')
-              .where('email', isEqualTo: email)
-              .get();
-
-          if (userSnapshot.docs.isNotEmpty) {
-            String userUid = userSnapshot.docs.first.id;
-
-            // Buscar as tarefas concluídas
-            QuerySnapshot taskSnapshot = await FirebaseFirestore.instance
-                .collection('Users')
-                .doc(userUid)
-                .collection('task')
-                .where('concluida', isEqualTo: true)
-                .get();
-
-            taskNotCount = taskSnapshot.docs.length;
-          }
-
-          // Retornar o email e o número de tarefas concluídas
-          return {'email': email, 'taskCount': taskNotCount};
-        }).toList();
-
-        List<Future<Map<String, dynamic>>> taskNot = emailsSet.map((email) async {
-          int taskCount = 0;
-
-          // Buscar o usuário correspondente na coleção 'Users'
-          QuerySnapshot userSnapshot = await FirebaseFirestore.instance
-              .collection('Users')
-              .where('email', isEqualTo: email)
-              .get();
-
-          if (userSnapshot.docs.isNotEmpty) {
-            String userUid = userSnapshot.docs.first.id;
-
-            // Buscar as tarefas não concluídas
-            QuerySnapshot taskSnapshot = await FirebaseFirestore.instance
-                .collection('Users')
-                .doc(userUid)
-                .collection('task')
-                .where('concluida', isEqualTo: false)
-                .get();
-
-            taskCount = taskSnapshot.docs.length;
-          }
-
-          // Retornar o email e o número de tarefas não concluídas
-          return {'email': email, 'taskCount': taskCount};
-        }).toList();
-
-        // Executar todas as tarefas em paralelo
-        List<Map<String, dynamic>> results = await Future.wait(tasks);
-        List<Map<String, dynamic>> resultsNot = await Future.wait(taskNot);
-
-        // Ordenar os resultados por número de tarefas concluídas
-        results.sort((a, b) => b['taskCount'].compareTo(a['taskCount']));
-        resultsNot.sort((a, b) => b['taskCount'].compareTo(a['taskCount']));
-
-        // Garantir que se não houver tarefas não concluídas, o valor seja 0
-        for (int i = 0; i < results.length; i++) {
-          results[i]['taskNotCount'] = resultsNot[i]['taskCount'] ?? 0;
-        }
-
-        setState(() {
-          reportList = results;
-          isLoading = false;
-        });
-      } else {
-        print('Nenhum usuário logado');
-        setState(() {
-          isLoading = false;
-        });
-        return; // Não continua se não houver usuário logado
-      }
-    } catch (e) {
-      print('Erro ao buscar dados: $e');
+      setState(() {
+        reportList = results;
+        isLoading = false;
+      });
+    } else {
+      print('Nenhum usuário logado');
       setState(() {
         isLoading = false;
       });
+      return; // Não continua se não houver usuário logado
     }
+  } catch (e) {
+    print('Erro ao buscar dados: $e');
+    setState(() {
+      isLoading = false;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {

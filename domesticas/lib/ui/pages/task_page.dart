@@ -52,8 +52,8 @@ class _TaskPageState extends State<TaskPage> {
           const SnackBar(content: Text('E-mail encontrado na família!')),
         );
         return true;
-      } else {
-        // Se não encontrar nenhum documento com o e-mail
+      } else {    
+        _responsibleController.clear();    // Se não encontrar nenhum documento com o e-mail
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Este e-mail não faz parte da sua família.')),
         );
@@ -93,6 +93,9 @@ class _TaskPageState extends State<TaskPage> {
         _selectedTime!.minute,
       );
 
+      // Cria um ID único para a tarefa com base no nome e data (ou use outro critério único)
+      String taskId = '${taskName}_${finalDateTime.toIso8601String()}';
+
       // Verifica se já existe uma tarefa com o mesmo nome e data
       final tasksSnapshot = await FirebaseFirestore.instance
           .collection('Users')
@@ -112,7 +115,8 @@ class _TaskPageState extends State<TaskPage> {
             .collection('Users')
             .doc(user.uid)
             .collection('task')
-            .add({
+            .doc(taskId) // Usando o ID customizado
+            .set({
           'nome': taskName,
           'descrição': taskDescription,
           'responsaveis': allResponsibles,
@@ -135,7 +139,8 @@ class _TaskPageState extends State<TaskPage> {
                   .collection('Users')
                   .doc(responsibleUid)
                   .collection('task')
-                  .add({
+                  .doc(taskId) // Usando o mesmo ID para o responsável
+                  .set({
                 'nome': taskName,
                 'descrição': taskDescription,
                 'responsaveis': allResponsibles,
@@ -373,6 +378,7 @@ class _TaskPageState extends State<TaskPage> {
                     if (isRegistered && !_responsibles.contains(email)) {
                       setState(() {
                         _responsibles.add(email);
+                        _responsibleController.clear();
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Responsável $email adicionado!')),

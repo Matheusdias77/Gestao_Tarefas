@@ -84,11 +84,6 @@ flutter:
         - asset: assets/fonts/AmaticSC-Regular.ttf
         - asset: assets/fonts/AmaticSC-Bold.ttf
           weight: 700
-    - family: OpenSans
-      fonts:
-        - asset: fonts/OpenSans-Regular.ttf
-        - asset: fonts/OpenSans-Bold.ttf
-          weight: 700
 
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

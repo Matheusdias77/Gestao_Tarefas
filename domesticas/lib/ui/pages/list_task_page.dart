@@ -18,7 +18,6 @@ class ListaTask extends StatefulWidget {
 
 class _ListaTaskState extends State<ListaTask> {
   int _selectedIndex = 0;
-  final List<String> tasks = [];
   String? _invitedEmail; 
   String? _inviterEmail; 
   bool _showInvitation = true; 
@@ -27,7 +26,6 @@ class _ListaTaskState extends State<ListaTask> {
   void initState() {
     super.initState();
     _checkInvitation();
-    _fetchTasks();
     Timer(const Duration(seconds: 15), () {
       setState(() {
         _showInvitation = false;
@@ -35,31 +33,11 @@ class _ListaTaskState extends State<ListaTask> {
     });
   }
 
-    void _onItemTapped(int index) {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
-
-    void _fetchTasks() {
-      User? user = FirebaseAuth.instance.currentUser;
-
-      if (user != null) {
-        FirebaseFirestore.instance
-            .collection('Users')
-            .doc(user.uid)
-            .collection('task')
-            .where('concluida', isEqualTo: false)  // Adicionando o filtro para tarefas não concluídas
-            .snapshots()
-            .listen((snapshot) {
-          setState(() {
-            tasks.clear();
-            tasks.addAll(snapshot.docs.map((doc) => doc['nome'] as String).toList());
-          });
-        });
-      }
-    }
-
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   // Função para verificar se o e-mail logado corresponde ao campo invitedEmail
   Future<void> _checkInvitation() async {
@@ -171,14 +149,14 @@ class _ListaTaskState extends State<ListaTask> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: const Text(
-            'House Buddy',
-            style: TextStyle(
-              fontFamily: 'OpenSans',  
-              fontWeight: FontWeight.bold,
-              fontSize: 28 ,  
-            ),
+        title: const Text(
+          'House Buddy',
+          style: TextStyle(
+            fontFamily: 'OpenSans',  
+            fontWeight: FontWeight.bold,
+            fontSize: 28,  
           ),
+        ),
         backgroundColor: const Color.fromARGB(255, 255, 187, 12),
         centerTitle: true,
         foregroundColor: Colors.white,
@@ -304,120 +282,147 @@ class _ListaTaskState extends State<ListaTask> {
     }
   }
 
-    Widget _buildTaskList() {
-  if (tasks.isEmpty) {
-    return const Center(
-      child: Text(
-        'Nenhuma tarefa disponível',
-        style: TextStyle(fontSize: 16, color: Colors.grey),
-      ),
-    );
-  }
+ Widget _buildTaskList() {
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('Users')
+        .doc(FirebaseAuth.instance.currentUser?.uid)
+        .collection('task')
+        .where('concluida', isEqualTo: false) // Filtrando apenas as tarefas não concluídas
+        .snapshots(), // Usando stream para atualizar em tempo real
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-  // Exibindo as tarefas se a lista não estiver vazia
-  return ListView.builder(
-    itemCount: tasks.length, // Número de itens na lista de tarefas
-    itemBuilder: (context, index) {
-      return Card(
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        child: ListTile(
-          title: Text(tasks[index]), // Exibindo o nome da tarefa
-          leading: const Icon(Icons.task), // Ícone para cada tarefa
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min, // Minimiza o espaço ocupado
-            children: [
-              IconButton(
-                icon: const Icon(Icons.check, color: Colors.green), // Ícone para concluir
-                  onPressed: () async {
+      if (snapshot.hasError) {
+        return Center(child: Text('Erro ao carregar tarefas: ${snapshot.error}'));
+      }
+
+      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        return const Center(child: Text('Nenhuma tarefa pendente.'));
+      }
+
+      final tasks = snapshot.data!.docs;
+
+      return ListView.builder(
+        itemCount: tasks.length,
+        itemBuilder: (context, index) {
+          final task = tasks[index];
+          final taskName = task['nome'];
+          final taskId = task.id;
+          final taskDescricao = task['descrição'];
+          final taskResponsaveis = task['responsaveis'] ?? []; 
+          final taskDate = task['Data']?.toDate();
+
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            elevation: 4,
+            child: ListTile(
+              title: Text(taskName),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (taskDescricao != null) Text('Descrição: $taskDescricao'),
+                  if (taskResponsaveis.isNotEmpty)
+                    Text('Responsáveis: ${taskResponsaveis.join(', ')}'), // Exibe todos os responsáveis
+                  if (taskDate != null) Text('Data: ${taskDate.toLocal()}'),
+                ],
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Botão de Concluir Tarefa
+                  IconButton(
+                    icon: const Icon(Icons.check_circle, color: Colors.green),
+                    onPressed: () async {
+                      // Atualiza o status da tarefa como concluída para o usuário atual
                       try {
-                        // Buscar o ID da tarefa (ou qualquer outro identificador único para a tarefa)
-                        String taskId = tasks[index]; // Assumindo que 'tasks' contém o nome da tarefa
+                        await FirebaseFirestore.instance
+                            .collection('Users')
+                            .doc(FirebaseAuth.instance.currentUser?.uid)
+                            .collection('task')
+                            .doc(taskId)
+                            .update({'concluida': true}); // Marca a tarefa como concluída para o usuário atual
 
-                        // Obter o usuário atual
-                        User? user = FirebaseAuth.instance.currentUser;
-                        
-                        if (user != null) {
-                          // Buscar a tarefa no Firestore com base no nome da tarefa
-                          await FirebaseFirestore.instance
+                        // Atualiza o status da tarefa como concluída para todos os responsáveis
+                        for (var responsible in taskResponsaveis) {
+                          var userDocs = await FirebaseFirestore.instance
                               .collection('Users')
-                              .doc(user.uid)
-                              .collection('task')
-                              .where('nome', isEqualTo: taskId) // Supondo que o campo 'nome' seja o identificador da tarefa
-                              .get()
-                              .then((snapshot) async {
-                            for (var doc in snapshot.docs) {
-                              // Atualizando o campo 'concluido' para true
-                              await FirebaseFirestore.instance
-                                  .collection('Users')
-                                  .doc(user.uid)
-                                  .collection('task')
-                                  .doc(doc.id) // Usando o ID do documento para atualizar
-                                  .update({'concluida': true});
-                            }
-                          });
-                          // Exibir uma mensagem de sucesso
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Tarefa concluída!')),
-                          );
+                              .where('email', isEqualTo: responsible)
+                              .get();
+
+                          if (userDocs.docs.isNotEmpty) {
+                            String responsibleUid = userDocs.docs.first.id;
+
+                            await FirebaseFirestore.instance
+                                .collection('Users')
+                                .doc(responsibleUid)
+                                .collection('task')
+                                .doc(taskId)
+                                .update({'concluida': true}); // Marca a tarefa como concluída para o responsável
+                          }
                         }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Tarefa concluída!')),
+                        );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Erro ao concluir a tarefa: $e'),
-                            backgroundColor: Colors.red,
-                          ),
+                          SnackBar(content: Text('Erro ao concluir tarefa: $e')),
                         );
                       }
                     },
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red), // Ícone para deletar a tarefa
-                onPressed: () async {
-                  try {
-                    // Buscar o ID da tarefa (ou qualquer outro identificador único para a tarefa)
-                    String taskId = tasks[index]; // Assumindo que 'tasks' contém o nome da tarefa
+                  ),
+                  // Botão de Excluir Tarefa
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      // Exclui a tarefa do Firebase
+                      try {
+                        await FirebaseFirestore.instance
+                            .collection('Users')
+                            .doc(FirebaseAuth.instance.currentUser?.uid)
+                            .collection('task')
+                            .doc(taskId)
+                            .delete(); // Exclui a tarefa
 
-                    // Obter o usuário atual
-                    User? user = FirebaseAuth.instance.currentUser;
-                    
-                    if (user != null) {
-                      // Excluir a tarefa do Firestore
-                      await FirebaseFirestore.instance
-                          .collection('Users')
-                          .doc(user.uid)
-                          .collection('task')
-                          .where('nome', isEqualTo: taskId) // Supondo que o campo 'nome' seja o identificador da tarefa
-                          .get()
-                          .then((snapshot) async {
-                        for (var doc in snapshot.docs) {
-                          // Excluindo o documento da coleção
-                          await FirebaseFirestore.instance
+                        // Exclui a tarefa para todos os responsáveis
+                        for (var responsible in taskResponsaveis) {
+                          var userDocs = await FirebaseFirestore.instance
                               .collection('Users')
-                              .doc(user.uid)
-                              .collection('task')
-                              .doc(doc.id) // Usando o ID do documento para excluir
-                              .delete();
+                              .where('email', isEqualTo: responsible)
+                              .get();
+
+                          if (userDocs.docs.isNotEmpty) {
+                            String responsibleUid = userDocs.docs.first.id;
+
+                            await FirebaseFirestore.instance
+                                .collection('Users')
+                                .doc(responsibleUid)
+                                .collection('task')
+                                .doc(taskId)
+                                .delete(); // Exclui a tarefa para o responsável
+                          }
                         }
-                      });
-                      setState(() {
-                        tasks.removeAt(index); // Remover tarefa da lista
-                      });
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Erro ao excluir a tarefa: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Tarefa excluída!')),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erro ao excluir tarefa: $e')),
+                        );
+                      }
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       );
     },
   );
-  }
+}
 }

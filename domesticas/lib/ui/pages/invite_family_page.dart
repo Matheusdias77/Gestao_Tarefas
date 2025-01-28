@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:domesticas/services/auth_service.dart';
 
 class InviteFamilyPage extends StatefulWidget {
   const InviteFamilyPage({super.key});
@@ -34,10 +33,6 @@ class _InviteFamilyPageState extends State<InviteFamilyPage> {
       final querySnapshot = await usersCollection.where('email', isEqualTo: email).get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        // O e-mail já está registrado
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Este e-mail já está registrado.')),
-        );
         return true;
       } else {
         // O e-mail não foi encontrado
