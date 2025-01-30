@@ -54,5 +54,6 @@ Aplicativo para facilitar a organização e gestão de tarefas domésticas, ince
 #### 1. Clonar o Repositório
 ```bash
 git clone https://github.com/Matheusdias77/Gestao_Tarefas
+```
 cd domesticas
 flutter run
