@@ -65,7 +65,7 @@ Future<void> _fetchRank() async {
         setState(() {
           isLoading = false;
         });
-        return; // Não continua com a busca do rank
+        return; 
       }
 
       print('Usuário está em uma ou mais famílias. Emails da(s) família(s): $familyEmails');
@@ -122,7 +122,7 @@ Future<void> _fetchRank() async {
       setState(() {
         isLoading = false;
       });
-      return; // Não continua se não houver usuário logado
+      return;
     }
   } catch (e) {
     print('Erro ao buscar dados: $e');
@@ -132,10 +132,7 @@ Future<void> _fetchRank() async {
   }
 }
 
-
-
-
-
+  // Ranks 
   String getRankCategory(int taskCount) {
     if (taskCount >= 15) {
       return 'Diamante';

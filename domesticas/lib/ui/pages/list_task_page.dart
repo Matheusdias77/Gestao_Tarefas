@@ -53,7 +53,6 @@ class _ListaTaskState extends State<ListaTask> {
             .get();
 
         if (snapshot.docs.isNotEmpty) {
-          // Se encontrar, exibe a mensagem
           setState(() {
             _invitedEmail = currentUserEmail;
             _inviterEmail = snapshot.docs.first['email']; // E-mail da pessoa que convidou
@@ -281,6 +280,8 @@ class _ListaTaskState extends State<ListaTask> {
         return const Center(child: Text('Página não encontrada'));
     }
   }
+
+  // Tarefas
 
  Widget _buildTaskList() {
   return StreamBuilder<QuerySnapshot>(

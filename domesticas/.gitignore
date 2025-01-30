@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Arquivos específicos a ignorar
+domesticas/lib/firebase_options.dart
+domesticas/android/app/google-services.json

@@ -16,8 +16,8 @@ class _InviteFamilyPageState extends State<InviteFamilyPage> {
   List<String> _responsibles = [];
 
   Future<bool> _isUserRegistered(String email, BuildContext context) async {
+    // Verifica se o formato do e-mail é válido
     try {
-      // Verifica se o formato do e-mail é válido
       if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$").hasMatch(email)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('E-mail inválido.')),
@@ -25,7 +25,6 @@ class _InviteFamilyPageState extends State<InviteFamilyPage> {
         return false;
       }
 
-      // Referência à coleção "Users" no Firestore
       final firestore = FirebaseFirestore.instance;
       final usersCollection = firestore.collection('Users');
 
@@ -35,14 +34,12 @@ class _InviteFamilyPageState extends State<InviteFamilyPage> {
       if (querySnapshot.docs.isNotEmpty) {
         return true;
       } else {
-        // O e-mail não foi encontrado
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Este e-mail não está registrado.')),
         );
         return false;
       }
     } catch (e) {
-      // Exibe uma mensagem de erro em caso de falha
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao verificar o e-mail: $e')),
       );
@@ -53,7 +50,7 @@ class _InviteFamilyPageState extends State<InviteFamilyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey, // Adicionando a chave ao Scaffold
+      key: _scaffoldKey,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -161,22 +158,20 @@ class _InviteFamilyPageState extends State<InviteFamilyPage> {
                       setState(() {
                         _responsibles.add(email);
                       });
-
                       // Salva os dados no Firestore
                       try {
                         final user = FirebaseAuth.instance.currentUser;
                         if (user != null) {
-                          // Referência à coleção "Users" no Firestore
                           final firestore = FirebaseFirestore.instance;
                           final usersCollection = firestore.collection('Users');
 
                           // Cria um novo documento com os dados do responsável convidado
                           await usersCollection.add({
-                            'name': name, // Nome do responsável
-                            'email': user.email, // Email do usuário logado
-                            'invitedEmail': email, // Email do responsável convidado
-                            'status': false, // Status como falso
-                            'createdAt': Timestamp.now(), // Data e hora de criação
+                            'name': name, 
+                            'email': user.email, 
+                            'invitedEmail': email, 
+                            'status': false, 
+                            'createdAt': Timestamp.now(), 
                           });
 
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -186,7 +181,6 @@ class _InviteFamilyPageState extends State<InviteFamilyPage> {
                           _nameController.clear();
                         }
                       } catch (e) {
-                        // Exibe uma mensagem de erro caso ocorra algum problema ao salvar no Firestore
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Erro ao adicionar responsável: $e')),
                         );

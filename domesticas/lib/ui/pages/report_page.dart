@@ -76,7 +76,6 @@ Future<void> _fetchReport() async {
         int taskNotCount = 0;
         int taskCount = 0;
 
-        // Buscar o usuário correspondente na coleção 'Users'
         QuerySnapshot userSnapshot = await FirebaseFirestore.instance
             .collection('Users')
             .where('email', isEqualTo: email)

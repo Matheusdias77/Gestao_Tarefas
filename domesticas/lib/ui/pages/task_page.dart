@@ -92,8 +92,6 @@ class _TaskPageState extends State<TaskPage> {
         _selectedTime!.hour,
         _selectedTime!.minute,
       );
-
-      // Cria um ID único para a tarefa com base no nome e data (ou use outro critério único)
       String taskId = '${taskName}_${finalDateTime.toIso8601String()}';
 
       // Verifica se já existe uma tarefa com o mesmo nome e data
@@ -115,7 +113,7 @@ class _TaskPageState extends State<TaskPage> {
             .collection('Users')
             .doc(user.uid)
             .collection('task')
-            .doc(taskId) // Usando o ID customizado
+            .doc(taskId) 
             .set({
           'nome': taskName,
           'descrição': taskDescription,
@@ -153,14 +151,11 @@ class _TaskPageState extends State<TaskPage> {
             }
           }
         }
-
-        // Exibe mensagem de sucesso
         _showMessage('Tarefa adicionada com sucesso!');
-        return true; // Indica sucesso
+        return true; 
       } else {
-        // Exibe mensagem de tarefa duplicada
         _showMessage('Já existe uma tarefa com esse nome e data!');
-        return false; // Tarefa duplicada
+        return false; 
       }
     } catch (e) {
       // Exibe mensagem de erro
@@ -185,12 +180,6 @@ class _TaskPageState extends State<TaskPage> {
       ),
     );
   }
-
-
-
-
-
-
 
   // Função para selecionar a data
   Future<void> _selectDate(BuildContext context) async {
@@ -326,7 +315,7 @@ class _TaskPageState extends State<TaskPage> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _responsibleController, // Certifique-se de que o controlador está atribuído corretamente
+                    controller: _responsibleController,
                     decoration: InputDecoration(
                       labelText: 'Convida Família',
                       labelStyle: TextStyle(
@@ -421,11 +410,11 @@ class _TaskPageState extends State<TaskPage> {
                   child: TextButton(
                   onPressed: () => _selectDate(context),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color.fromARGB(255, 255, 255, 255), // Cor do texto (preto)
-                    backgroundColor: const Color.fromARGB(255, 255, 187, 12), // Cor de fundo
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12), // Padding
+                    foregroundColor: const Color.fromARGB(255, 255, 255, 255), 
+                    backgroundColor: const Color.fromARGB(255, 255, 187, 12), 
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12), 
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10), // Bordas arredondadas
+                      borderRadius: BorderRadius.circular(10), 
                     ),
                   ),
                   child: Text(
@@ -433,7 +422,7 @@ class _TaskPageState extends State<TaskPage> {
                         ? 'Selecionar Data'
                         : 'Data: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                     style: TextStyle(
-                      fontSize: 16, // Tamanho da fonte
+                      fontSize: 16,
                     ),
                   ),
                 ),
